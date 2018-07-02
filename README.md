@@ -1,5 +1,5 @@
 # Defque
-A deferred task execution engine/(queue) in GO
+A deferred task execution queue in GO
 
 
 
