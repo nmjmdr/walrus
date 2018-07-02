@@ -1,5 +1,8 @@
 # Defque
-A deferred task execution queue in GO
+
+> "The time has come," the walrus said, "To talk of other things..."
+
+A deferred task execution engine in GO
 
 
 
