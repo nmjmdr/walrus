@@ -1,4 +1,4 @@
-# Rus
+# walrus
 
 > "The time has come," the walrus said, "To talk of other things..."
 
