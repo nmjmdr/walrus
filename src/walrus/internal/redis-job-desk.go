@@ -2,13 +2,17 @@ package internal
 
 import (
   "walrus/models"
+  "github.com/go-redis/redis"
 )
 
 type redisJobDesk struct {
+  client redis.Client
 }
 
 func NewJobDesk() JobDesk {
   r := redisJobDesk{}
+  // read from env
+  //r.client =
   return &r
 }
 
