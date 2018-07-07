@@ -1,6 +1,6 @@
 package models
 
 type Job struct {
-  Type string
-  Paylaod string
+	Type    string
+	Paylaod string
 }
