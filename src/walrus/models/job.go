@@ -1,6 +1,8 @@
 package models
 
 type Job struct {
-	Type    string
-	Paylaod string
+  Id string `json:"id"`
+	Type    string `json:"type"`
+	Paylaod string `json:"payload"`
+  RunAt int64 `json:"runAt"`
 }

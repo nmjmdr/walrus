@@ -1,11 +1,11 @@
-package queue
+package schedulerqueue
 
 import (
-	"walrus/models"
+	"time"
 )
 
 type Queue interface {
-	Add(job models.Job) string
+	Add(jobType string, payload string, runAfterSeconds time.Duration) string
 	Delete(jobId string) error
 	Update(jobId string, payload string) error
 }

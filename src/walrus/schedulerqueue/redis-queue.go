@@ -1,4 +1,4 @@
-package queue
+package schedulerqueue
 
 import (
 	"github.com/go-redis/redis"
@@ -6,14 +6,36 @@ import (
   "os"
   "strings"
   "log"
+  "time"
+  "github.com/satori/go.uuid"
+  "encoding/json"
 )
+
+const SCHEDULER_QUEUE = "SCHEDULER_QUEUE"
 
 type redisQueue struct {
 	client *redis.Client
 }
 
-func (r *redisQueue) Add(job models.Job) string {
-	return ""
+func newJob(jobType string, payload string, runAt int64) models.Job {
+  id := uuid.Must(uuid.NewV4())
+  return models.Job { Id: id.String(), Type: jobType, Paylaod: payload, RunAt: runAt }
+}
+
+func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) string {
+  runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
+  job := newJob(jobType, payload, runAt)
+
+  serialized, err := json.Marshal(job)
+  if err != nil {
+    panic("Could not serialize job during add")
+  }
+
+  r.client.ZAdd(SCHEDULER_QUEUE, redis.Z{
+    Score: float64(runAt),
+    Member: string(serialized[:]),
+  })
+	return job.Id
 }
 
 func (r *redisQueue) Update(jobId string, paylaod string) error {
