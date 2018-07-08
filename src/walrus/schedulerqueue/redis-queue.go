@@ -39,49 +39,84 @@ func toJson(object interface{}) (string, error) {
   return jobJs, nil
 }
 
-func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) string {
+func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
   runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
   job := newJob(jobType, payload, runAt)
 
   jobJs, err := toJson(job)
   if err != nil {
-    panic("Unable to serialize job")
+    return "", errors.New(fmt.Sprintf("Unable to serialize job, Error: %s", err))
   }
 
   jobKeyField := getJobKeyField(job.Id)
-  r.client.HSet(JOBS_MAP, jobKeyField, jobJs)
+  hSetCmd := r.client.HSet(JOBS_MAP, jobKeyField, jobJs)
+  if hSetCmd.Err() != nil {
+    return "", errors.New(fmt.Sprintf("Unable to add job to queue, Error: %s", hSetCmd.Err()))
+  }
 
-  r.client.ZAdd(SCHEDULER_QUEUE, redis.Z{
+  zAddCmd := r.client.ZAdd(SCHEDULER_QUEUE, redis.Z{
     Score: float64(runAt),
     Member: jobJs,
   })
-	return job.Id
+
+  if zAddCmd.Err() != nil {
+    return "", errors.New(fmt.Sprintf("Unable to add job to queue, Error: %s", zAddCmd.Err()))
+  }
+
+	return job.Id, nil
 }
 
-func (r *redisQueue) Update(jobId string, payload string) error {
+func (r *redisQueue) getSavedJob(jobId string) (*models.Job, error) {
   jobKeyField := getJobKeyField(jobId)
-  jobJsCommand := r.client.HGet(JOBS_MAP, jobKeyField)
-  if jobJsCommand.Err() != nil {
-    fmt.Println(jobJsCommand.Err())
-    return errors.New("Job does not exist")
+  hGetCmd := r.client.HGet(JOBS_MAP, jobKeyField)
+  if hGetCmd.Err() != nil {
+    return nil, errors.New(fmt.Sprintf("Could not fetch job, Error: %s",hGetCmd.Err()))
   }
-  jobJs := jobJsCommand.Val()
+  jobJs := hGetCmd.Val()
   job := &models.Job{}
   err := json.Unmarshal([]byte(jobJs), job)
   if err != nil {
-    return errors.New(fmt.Sprintf("Unable to Unmarshall job with id: ", jobId))
+    return nil, errors.New(fmt.Sprintf("Unable to Unmarshall job with id: %s, Error: %s", jobId, err))
+  }
+  return job, nil
+}
+
+func (r *redisQueue) Update(jobId string, payload string) error {
+
+  job, err := r.getSavedJob(jobId)
+  if err != nil {
+    return errors.New(fmt.Sprintf("Unable to get job : %s", err))
   }
   job.Payload = payload
-  jobJs, err = toJson(job)
-  if err != nil {
+  jobJs, jsonErr := toJson(job)
+  if jsonErr != nil {
     panic("Unable to serialize back to json in update")
   }
 
-  r.client.HSet(JOBS_MAP, jobKeyField, jobJs)
+  hSetCmd := r.client.HSet(JOBS_MAP, getJobKeyField(jobId), jobJs)
+  if hSetCmd.Err() != nil {
+    return errors.New(fmt.Sprintf("Unable to update job, Error: %s", hSetCmd.Err()))
+  }
+
 	return nil
 }
 
 func (r *redisQueue) Delete(jobId string) error {
+  job, err := r.getSavedJob(jobId)
+  if err != nil {
+    return errors.New(fmt.Sprintf("Unable to get job to delete: %s", err))
+  }
+
+  jobJs, jsonErr := toJson(job)
+  if jsonErr != nil {
+    panic("Unable to serialize back to json in delete")
+  }
+
+  hDelCmd := r.client.HDel(JOBS_MAP, getJobKeyField(jobId), jobJs)
+  if hDelCmd.Err() != nil {
+    return errors.New(fmt.Sprintf("Unable to delete job, Error: %s", hDelCmd.Err()))
+  }
+
 	return nil
 }
 
