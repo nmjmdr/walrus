@@ -14,5 +14,5 @@ func main() {
     log.Fatal("Error loading .env file")
   }
 
- fmt.Println(schedulerqueue.NewRedisQueue().Add("type", "payload", time.Duration(2)))
+ fmt.Println(schedulerqueue.NewRedisQueue().Add("type1", "payload1", time.Duration(2)))
 }
