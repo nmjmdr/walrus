@@ -3,14 +3,12 @@ package schedulerqueue
 import (
 	"github.com/go-redis/redis"
 	"walrus/models"
-  "os"
-  "strings"
-  "log"
   "time"
   "github.com/satori/go.uuid"
   "encoding/json"
   "fmt"
   "errors"
+  "walrus/utils"
 )
 
 const SCHEDULER_QUEUE = "SCHEDULER_QUEUE"
@@ -30,20 +28,11 @@ func newJob(jobType string, payload string, runAt int64) models.Job {
   return models.Job { Id: id.String(), Type: jobType, Payload: payload, RunAt: runAt }
 }
 
-func toJson(object interface{}) (string, error) {
-  serialized, err := json.Marshal(object)
-  if err != nil {
-    return "", err
-  }
-  jobJs := string(serialized[:])
-  return jobJs, nil
-}
-
 func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
   runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
   job := newJob(jobType, payload, runAt)
 
-  jobJs, err := toJson(job)
+  jobJs, err := utils.ToJson(job)
   if err != nil {
     return "", errors.New(fmt.Sprintf("Unable to serialize job, Error: %s", err))
   }
@@ -88,7 +77,7 @@ func (r *redisQueue) Update(jobId string, payload string) error {
     return errors.New(fmt.Sprintf("Unable to get job : %s", err))
   }
   job.Payload = payload
-  jobJs, jsonErr := toJson(job)
+  jobJs, jsonErr := utils.ToJson(job)
   if jsonErr != nil {
     panic("Unable to serialize back to json in update")
   }
@@ -107,7 +96,7 @@ func (r *redisQueue) Delete(jobId string) error {
     return errors.New(fmt.Sprintf("Unable to get job to delete: %s", err))
   }
 
-  jobJs, jsonErr := toJson(job)
+  jobJs, jsonErr := utils.ToJson(job)
   if jsonErr != nil {
     panic("Unable to serialize back to json in delete")
   }
@@ -120,28 +109,11 @@ func (r *redisQueue) Delete(jobId string) error {
 	return nil
 }
 
-type redisOptions struct {
-  Addr string
-  Password string
-  DB int
-}
 
-func loadRedisOptions() *redis.Options {
-  addr := os.Getenv("REDIS_ADDR")
-  if len(strings.TrimSpace(addr)) == 0 {
-    log.Print("Warning: REDIS_ADDR is not defined in environment variables connecting to default")
-    addr = "localhost:6379"
-  }
-
-  password := os.Getenv("REDIS_PASSWORD")
-
-  return &redis.Options{ Addr: addr, Password: password, DB: 0 }
-}
 
 func NewRedisQueue() Queue {
-
 	r := redisQueue{}
-  options := loadRedisOptions()
+  options := utils.LoadRedisOptions()
 	r.client = redis.NewClient(options)
 
 	return &r
