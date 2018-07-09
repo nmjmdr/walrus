@@ -9,6 +9,6 @@ func ToJson(object interface{}) (string, error) {
   if err != nil {
     return "", err
   }
-  jobJs := string(serialized[:])
-  return jobJs, nil
+  js := string(serialized[:])
+  return js, nil
 }
