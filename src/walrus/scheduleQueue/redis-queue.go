@@ -9,9 +9,9 @@ import (
   "fmt"
   "errors"
   "walrus/utils"
+  "constants"
 )
 
-const SCHEDULER_QUEUE = "SCHEDULER_QUEUE"
 const JOBS_MAP = "JOBS_MAP"
 const JOB_FIELD_KEY_PREFIX = "Job_"
 
@@ -43,7 +43,7 @@ func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Du
     return "", errors.New(fmt.Sprintf("Unable to add job to queue, Error: %s", hSetCmd.Err()))
   }
 
-  zAddCmd := r.client.ZAdd(SCHEDULER_QUEUE, redis.Z{
+  zAddCmd := r.client.ZAdd(constants.SCHEDULER_QUEUE, redis.Z{
     Score: float64(runAt),
     Member: jobJs,
   })
