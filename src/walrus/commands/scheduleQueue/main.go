@@ -3,7 +3,7 @@ package main
 import (
     "github.com/joho/godotenv"
     "log"
-    "walrus/schedulerqueue"
+    "walrus/scheduleQueue"
     "fmt"
     "time"
 )
@@ -14,7 +14,7 @@ func main() {
     log.Fatal("Error loading .env file")
   }
 
-  rq := schedulerqueue.NewRedisQueue()
+  rq := scheduleQueue.NewRedisQueue()
 
   jobId, _ := rq.Add("type1", "payload1", time.Duration(2))
   fmt.Println("Job id: ", jobId)

@@ -1,4 +1,4 @@
-package schedulerqueue
+package scheduleQueue
 
 import (
 	"github.com/go-redis/redis"
