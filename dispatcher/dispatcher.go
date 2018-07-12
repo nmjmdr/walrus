@@ -1,3 +1,5 @@
+package dispacther
+
 import (
 	"github.com/go-redis/redis"
 )

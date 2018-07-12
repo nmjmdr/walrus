@@ -9,7 +9,7 @@ import (
   "fmt"
   "errors"
   "walrus/utils"
-  "constants"
+  "walrus/constants"
 )
 
 const JOBS_MAP = "JOBS_MAP"
@@ -24,7 +24,7 @@ func getJobKeyField(jobId string) string {
 }
 
 func newJob(jobType string, payload string, runAt int64) models.Job {
-  id := uuid.Must(uuid.NewV4())
+  id := uuid.NewV4()
   return models.Job { Id: id.String(), Type: jobType, Payload: payload, RunAt: runAt }
 }
 
