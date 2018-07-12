@@ -10,7 +10,7 @@ import (
 func LoadRedisOptions() *redis.Options {
   addr := os.Getenv("REDIS_ADDR")
   if len(strings.TrimSpace(addr)) == 0 {
-    log.Print("Warning: REDIS_ADDR is not defined in environment variables connecting to default")
+    log.Print("Warning: REDIS_ADDR is not defined in environment variables; connecting to default")
     addr = "localhost:6379"
   }
 

@@ -1,4 +1,4 @@
-package scheduler
+package schedule
 
 import (
 	"github.com/go-redis/redis"
@@ -15,7 +15,7 @@ import (
 const JOBS_MAP = "JOBS_MAP"
 const JOB_FIELD_KEY_PREFIX = "Job_"
 
-type redisQueue struct {
+type redisScheduleQueue struct {
 	client *redis.Client
 }
 
@@ -28,7 +28,7 @@ func newJob(jobType string, payload string, runAt int64) models.Job {
   return models.Job { Id: id.String(), Type: jobType, Payload: payload, RunAt: runAt }
 }
 
-func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
+func (r *redisScheduleQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
   runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
   job := newJob(jobType, payload, runAt)
 
@@ -55,7 +55,7 @@ func (r *redisQueue) Add(jobType string, payload string, runAfterSeconds time.Du
 	return job.Id, nil
 }
 
-func (r *redisQueue) getSavedJob(jobId string) (*models.Job, error) {
+func (r *redisScheduleQueue) getSavedJob(jobId string) (*models.Job, error) {
   jobKeyField := getJobKeyField(jobId)
   hGetCmd := r.client.HGet(JOBS_MAP, jobKeyField)
   if hGetCmd.Err() != nil {
@@ -70,7 +70,7 @@ func (r *redisQueue) getSavedJob(jobId string) (*models.Job, error) {
   return job, nil
 }
 
-func (r *redisQueue) Update(jobId string, payload string) error {
+func (r *redisScheduleQueue) Update(jobId string, payload string) error {
 
   job, err := r.getSavedJob(jobId)
   if err != nil {
@@ -90,7 +90,7 @@ func (r *redisQueue) Update(jobId string, payload string) error {
 	return nil
 }
 
-func (r *redisQueue) Delete(jobId string) error {
+func (r *redisScheduleQueue) Delete(jobId string) error {
   job, err := r.getSavedJob(jobId)
   if err != nil {
     return errors.New(fmt.Sprintf("Unable to get job to delete: %s", err))
@@ -111,8 +111,8 @@ func (r *redisQueue) Delete(jobId string) error {
 
 
 
-func NewRedisQueue() Queue {
-	r := redisQueue{}
+func newRedisScheduleQueue() Schedule {
+	r := redisScheduleQueue{}
   options := utils.LoadRedisOptions()
 	r.client = redis.NewClient(options)
 

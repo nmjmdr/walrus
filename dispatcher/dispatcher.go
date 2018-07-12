@@ -1,20 +1,17 @@
 package dispacther
 
 import (
-	"github.com/go-redis/redis"
+	"walrus/schedule"
 )
 
 
 type Dispatcher struct {
-  client *redis.Client
   quitCh chan bool
 }
 
 func NewDispatcher() *Dispatcher {
-  s := &Scheduler()
-  options := utils.LoadRedisOptions()
-	s.client = redis.NewClient(options)
-  s.quitCh = make(chan bool)
+  d := &Dispatcher{}
+  d.quitCh = make(chan bool)
   return s
 }
 
@@ -26,7 +23,7 @@ func (s *Dispatcher) dispatch() {
     case _ = <- s.quitCh:
       break;
     default:
-      // pick jobs to dispatch here
+      // pick jobs to dispatch here from schedule queue
     }
   }
 }
