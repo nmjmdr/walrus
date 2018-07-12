@@ -13,4 +13,5 @@
 
 .env
 
-/vendor
+/vendor/*
+
