@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"log"
-	"walrus/constants"
-	"walrus/utils"
 	"strconv"
 	"time"
+	"walrus/constants"
 	"walrus/models"
+	"walrus/utils"
 )
 
 type Dispatcher struct {
@@ -23,7 +23,6 @@ func NewDispatcher() *Dispatcher {
 	d.quitCh = make(chan bool)
 	return d
 }
-
 
 func crush(errs []error) error {
 	for i := 0; i < len(errs); i++ {
@@ -61,7 +60,7 @@ func (d *Dispatcher) transact(tx *redis.Tx) error {
 	_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
 		rPushCmd := pipe.RPush(workerQueue, job.Payload)
 		zRemCmd := pipe.ZRem(constants.SCHEDULER_QUEUE, results[0])
-		hDelCmd := pipe.HDel(constants.JOBS_MAP,utils.GetJobKeyField(job.Id))
+		hDelCmd := pipe.HDel(constants.JOBS_MAP, utils.GetJobKeyField(job.Id))
 		_, err = pipe.Exec()
 		return crush([]error{err, rPushCmd.Err(), zRemCmd.Err(), hDelCmd.Err()})
 	})
