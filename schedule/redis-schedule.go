@@ -11,15 +11,8 @@ import (
   "walrus/constants"
 )
 
-const JOBS_MAP = "JOBS_MAP"
-const JOB_FIELD_KEY_PREFIX = "Job_"
-
 type redisScheduleQueue struct {
 	client *redis.Client
-}
-
-func getJobKeyField(jobId string) string {
-  return fmt.Sprintf("%s_%s",JOB_FIELD_KEY_PREFIX,jobId)
 }
 
 func newJob(jobType string, payload string, runAt int64) models.Job {
@@ -36,8 +29,8 @@ func (r *redisScheduleQueue) Add(jobType string, payload string, runAfterSeconds
     return "", errors.New(fmt.Sprintf("Unable to serialize job, Error: %s", err))
   }
 
-  jobKeyField := getJobKeyField(job.Id)
-  hSetCmd := r.client.HSet(JOBS_MAP, jobKeyField, jobJs)
+  jobKeyField := utils.GetJobKeyField(job.Id)
+  hSetCmd := r.client.HSet(constants.JOBS_MAP, jobKeyField, jobJs)
   if hSetCmd.Err() != nil {
     return "", errors.New(fmt.Sprintf("Unable to add job to queue, Error: %s", hSetCmd.Err()))
   }
@@ -55,8 +48,8 @@ func (r *redisScheduleQueue) Add(jobType string, payload string, runAfterSeconds
 }
 
 func (r *redisScheduleQueue) getSavedJob(jobId string) (*models.Job, error) {
-  jobKeyField := getJobKeyField(jobId)
-  hGetCmd := r.client.HGet(JOBS_MAP, jobKeyField)
+  jobKeyField := utils.GetJobKeyField(jobId)
+  hGetCmd := r.client.HGet(constants.JOBS_MAP, jobKeyField)
   if hGetCmd.Err() != nil {
     return nil, errors.New(fmt.Sprintf("Could not fetch job, Error: %s",hGetCmd.Err()))
   }
@@ -80,7 +73,7 @@ func (r *redisScheduleQueue) Update(jobId string, payload string) error {
     panic("Unable to serialize back to json in update")
   }
 
-  hSetCmd := r.client.HSet(JOBS_MAP, getJobKeyField(jobId), jobJs)
+  hSetCmd := r.client.HSet(constants.JOBS_MAP, utils.GetJobKeyField(jobId), jobJs)
   if hSetCmd.Err() != nil {
     return errors.New(fmt.Sprintf("Unable to update job, Error: %s", hSetCmd.Err()))
   }
@@ -99,7 +92,7 @@ func (r *redisScheduleQueue) Delete(jobId string) error {
     panic("Unable to serialize back to json in delete")
   }
 
-  hDelCmd := r.client.HDel(JOBS_MAP, getJobKeyField(jobId), jobJs)
+  hDelCmd := r.client.HDel(constants.JOBS_MAP, utils.GetJobKeyField(jobId), jobJs)
   if hDelCmd.Err() != nil {
     return errors.New(fmt.Sprintf("Unable to delete job, Error: %s", hDelCmd.Err()))
   }

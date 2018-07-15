@@ -1,107 +1,96 @@
 package dispatcher
 
 import (
+	"fmt"
 	"github.com/go-redis/redis"
+	"log"
 	"walrus/constants"
 	"walrus/utils"
-	"log"
-	"fmt"
-	"walrus/utils"
+	"strconv"
+	"time"
+	"walrus/models"
 )
 
-
 type Dispatcher struct {
-  quitCh chan bool
+	quitCh chan bool
 	client *redis.Client
 }
 
 func NewDispatcher() *Dispatcher {
-  d := &Dispatcher{}
+	d := &Dispatcher{}
 	options := utils.LoadRedisOptions()
 	d.client = redis.NewClient(options)
-  d.quitCh = make(chan bool)
-  return d
+	d.quitCh = make(chan bool)
+	return d
 }
 
 
-func parseScheduleResult(cmdResult) (*models.Job, error) {
-	if cmdResult.Err() != nil {
-		return nil, cmdResult.Err()
+func crush(errs []error) error {
+	for i := 0; i < len(errs); i++ {
+		if errs[i] != nil {
+			return errs[i]
+		}
 	}
-	
+	return nil
 }
 
-func (d *Dispatcher) fetch() {
-	minScore := 0
-	maxScore := time.UnixNano()
-	err := client.Watch(func(tx *redis.Tx) error {
-		cmdResult := tx.ZRangeByScore(constants.SCHEDULER_QUEUE, ZRangeBy{
-			Min: strconv.FormatInt(minScore, 10)
-			Max: strconv.FormatInt(maxScore, 10)
-			Offset: 0
-			Count: 1
-		})
-		parseScheduleResult(cmdResult)
-	}, constants.SCHEDULER_QUEUE)
-
-	if err != nil {
-
-	}
-	log.Print(fmt.Sprintf("Error: could not fetch from schedule queue",err))
-}
-
-/*
-func (d *Dispatcher) fetch() {
-	minScore := 0
-	maxScore := time.UnixNano()
-	d.client.Watch(constants.SCHEDULER_QUEUE)
-	stringsSliceCmd := client.ZRangeByScore(constants.SCHEDULER_QUEUE, ZRangeBy{
-		Min: strconv.FormatInt(minScore, 10)
-		Max: strconv.FormatInt(maxScore, 10)
-		Offset: 0
-		Count: 1
+func (d *Dispatcher) transact(tx *redis.Tx) error {
+	minScore := int64(0)
+	maxScore := time.Now().UnixNano()
+	stringsSliceCmd := d.client.ZRangeByScore(constants.SCHEDULER_QUEUE, redis.ZRangeBy{
+		Min:    strconv.FormatInt(minScore, 10),
+		Max:    strconv.FormatInt(maxScore, 10),
+		Offset: 0,
+		Count:  1,
 	})
-	if stringsSliceCmd.Err() != nil {
-		d.client.Watch(constants.SCHEDULER_QUEUE)
-		log.Print(fmt.Sprintf("Error: could not fetch from schedule queue",stringsSliceCmd.Err())
-		return
-	}
 	results, err := stringsSliceCmd.Result()
 	if err != nil {
-		d.client.Watch(constants.SCHEDULER_QUEUE)
-		log.Print(fmt.Sprintf("Error: could not fetch from schedule queue",stringsSliceCmd.Err())
-		return
+		return err
 	}
+
 	if len(results) == 0 {
-		d.client.Watch(constants.SCHEDULER_QUEUE)
-		return
+		return nil
 	}
-	job, err := utils.ToJob(results[0])
+	var job *models.Job
+	job, err = utils.ToJob(results[0])
 	if err != nil {
-		d.client.Watch(constants.SCHEDULER_QUEUE)
-		log.Print(fmt.Sprintf("Unable to unmarshal json in dispatcher, Error: ",err))
-		return
+		return err
 	}
 
 	workerQueue := utils.GetWorkerQueueName(job.Type)
-	d.client.Multi()
+	_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
+		rPushCmd := pipe.RPush(workerQueue, job.Payload)
+		zRemCmd := pipe.ZRem(constants.SCHEDULER_QUEUE, results[0])
+		hDelCmd := pipe.HDel(constants.JOBS_MAP,utils.GetJobKeyField(job.Id))
+		_, err = pipe.Exec()
+		return crush([]error{err, rPushCmd.Err(), zRemCmd.Err(), hDelCmd.Err()})
+	})
+	return err
 }
-*/
 
+func (d *Dispatcher) fetch() {
+	err := d.client.Watch(d.transact)
+	if err != nil {
+		if err == redis.TxFailedErr {
+			return
+		}
+		log.Print(fmt.Sprintf("Error: could not fetch from schedule queue", err))
+	}
+}
 
 func (d *Dispatcher) dispatch() {
-  for ;; {
-    select {
-    case _ = <- d.quitCh:
-      break;
+	for {
+		select {
+		case _ = <-d.quitCh:
+			break
 		default:
 			d.fetch()
-    }
-  }
+		}
+	}
 }
 
 func (s *Dispatcher) Start() {
-  go s.dispatch()
+	s.dispatch()
 }
 
 func (s *Dispatcher) Stop() {
