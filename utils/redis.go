@@ -5,6 +5,8 @@ import (
   "os"
   "strings"
   "log"
+	"fmt"
+	"walrus/constants"
 )
 
 func LoadRedisOptions() *redis.Options {
@@ -17,4 +19,14 @@ func LoadRedisOptions() *redis.Options {
   password := os.Getenv("REDIS_PASSWORD")
 
   return &redis.Options{ Addr: addr, Password: password, DB: 0 }
+}
+
+
+func GetWorkerQueueName(jobType string) string {
+  return fmt.Sprintf("%s_%s",constants.WORKER_QUEUE_PREFIX,jobType)
+}
+
+
+func GetJobKeyField(jobId string) string {
+  return fmt.Sprintf("%s_%s",constants.JOB_FIELD_KEY_PREFIX,jobId)
 }
