@@ -77,7 +77,7 @@ func (d *Dispatcher) fetch() {
 	}
 }
 
-func (d *Dispatcher) dispatch() {
+func (d *Dispatcher) Start() {
 	for {
 		select {
 		case _ = <-d.quitCh:
@@ -86,10 +86,6 @@ func (d *Dispatcher) dispatch() {
 			d.fetch()
 		}
 	}
-}
-
-func (s *Dispatcher) Start() {
-	s.dispatch()
 }
 
 func (s *Dispatcher) Stop() {
