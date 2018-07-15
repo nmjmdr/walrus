@@ -17,7 +17,7 @@ func main() {
 
   rq := schedule.GetSchedule()
 
-  jobId, _ := rq.Add("type1", "payload1", time.Duration(2))
+  jobId, _ := rq.Add("type1", "payload1", time.Duration(60))
   fmt.Println("Job id: ", jobId)
 
   d := dispatcher.NewDispatcher()
