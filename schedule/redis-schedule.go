@@ -5,7 +5,6 @@ import (
 	"walrus/models"
   "time"
   "github.com/satori/go.uuid"
-  "encoding/json"
   "fmt"
   "errors"
   "walrus/utils"
@@ -62,8 +61,7 @@ func (r *redisScheduleQueue) getSavedJob(jobId string) (*models.Job, error) {
     return nil, errors.New(fmt.Sprintf("Could not fetch job, Error: %s",hGetCmd.Err()))
   }
   jobJs := hGetCmd.Val()
-  job := &models.Job{}
-  err := json.Unmarshal([]byte(jobJs), job)
+  job, err := utils.ToJob(jobJs)
   if err != nil {
     return nil, errors.New(fmt.Sprintf("Unable to Unmarshall job with id: %s, Error: %s", jobId, err))
   }
