@@ -58,7 +58,7 @@ func (d *Dispatcher) transact(tx *redis.Tx) error {
 
 	workerQueue := utils.GetWorkerQueueName(job.Type)
 	_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
-		rPushCmd := pipe.RPush(workerQueue, job.Payload)
+		rPushCmd := pipe.RPush(workerQueue, results[0])
 		zRemCmd := pipe.ZRem(constants.SCHEDULER_QUEUE, results[0])
 		hDelCmd := pipe.HDel(constants.JOBS_MAP, utils.GetJobKeyField(job.Id))
 		_, err = pipe.Exec()

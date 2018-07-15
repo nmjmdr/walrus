@@ -15,14 +15,14 @@ type redisScheduleQueue struct {
 	client *redis.Client
 }
 
-func newJob(jobType string, payload string, runAt int64) models.Job {
+func newJob(jobType string, payload string) models.Job {
 	id := uuid.NewV4()
-	return models.Job{Id: id.String(), Type: jobType, Payload: payload, RunAt: runAt}
+	return models.Job{Id: id.String(), Type: jobType, Payload: payload}
 }
 
 func (r *redisScheduleQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
 	runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
-	job := newJob(jobType, payload, runAt)
+	job := newJob(jobType, payload)
 
 	jobJs, err := utils.ToJson(job)
 	if err != nil {
