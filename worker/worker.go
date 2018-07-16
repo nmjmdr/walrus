@@ -3,10 +3,13 @@ package worker
 import (
 	"github.com/go-redis/redis"
 	"walrus/utils"
+	"walrus/constants"
+	"walrus/postbox"
 )
 
 type Handler interface {
-	process(payload string) (string, error)
+	Process(payload string) (string, error)
+	JobType() string
 }
 
 
@@ -14,15 +17,17 @@ type Worker struct {
 	client   *redis.Client
 	handler Handler
 	quitCh chan bool
+	resultPost ResultsPostbox
 }
 
 
-func NewWorker(handler Handler) Worker {
+func NewWorker(handler Handler, resultPost ResultsPostbox) Worker {
 	w := &Worker{}
 	w.quitCh = make(chan bool)
 	w.handler = handler
 	options := utils.LoadRedisOptions()
-	d.client = redis.NewClient(options)
+	w.client = redis.NewClient(options)
+	w.resultPost = resultPost
 	return w
 }
 
@@ -47,8 +52,31 @@ logic:
 // The standard approach of implementing reliable queue using Redis is probably preferable
 // because we can awlays run multiple process which move items from "processing" queue back to worker_queue
 
-func (w *Worker) work() {
 
+func (w *Worker) work() {
+	workerQueue := utils.GetWorkerQueueName(d.Handler.JobType())
+	cmd := w.client.RPopLPush(workerQueue, constants.PROCESSING_QUEUE)
+	result, err := cmd.Result()
+	if err != nil {
+		log.Print(fmt.Sprintf("Could not fetch jobs from worker queue: %s",err))
+		return
+	}
+	if result == nil {
+		return nil
+	}
+	var job *models.Job
+	job, err = utils.ToJob(results[0])
+	if err != nil {
+		log.Print(fmt.Sprintf("Could not serialize job from queue: %s",err))
+		return
+	}
+	pResult, pErr := w.Handler.Process(job.Payload)
+	w.resultPost.Post(job, pResult, pErr)
+	jobJs = utils.ToJson(job)
+	lremCmd := w.client.LRem(constants.PROCESSING_QUEUE,1,jobJs)
+	if lremCmd.Err() != nil {
+		log.Print(fmt.Sprintf("Could not delete job id: %s from processing queue, Error: %s",job.Id, err))
+	}
 }
 
 func (w *Worker) Start() {

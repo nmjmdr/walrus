@@ -36,7 +36,7 @@ func crush(errs []error) error {
 func (d *Dispatcher) transact(tx *redis.Tx) error {
 	minScore := int64(0)
 	maxScore := time.Now().UnixNano()
-	stringsSliceCmd := d.client.ZRangeByScore(constants.SCHEDULER_QUEUE, redis.ZRangeBy{
+	stringsSliceCmd := tx.ZRangeByScore(constants.SCHEDULER_QUEUE, redis.ZRangeBy{
 		Min:    strconv.FormatInt(minScore, 10),
 		Max:    strconv.FormatInt(maxScore, 10),
 		Offset: 0,
@@ -73,7 +73,7 @@ func (d *Dispatcher) fetch() {
 		if err == redis.TxFailedErr {
 			return
 		}
-		log.Print(fmt.Sprintf("Error: could not fetch from schedule queue", err))
+		log.Print(fmt.Sprintf("Error: could not fetch from schedule queue: %s", err))
 	}
 }
 
