@@ -60,14 +60,13 @@ func (w *Worker) work() {
 	workerQueue := utils.GetWorkerQueueName(w.handler.JobType())
 	cmd := w.client.RPopLPush(workerQueue, constants.PROCESSING_QUEUE)
 	result, err := cmd.Result()
-	if err != nil {
-		log.Print(fmt.Sprintf("Could not fetch jobs from worker queue: %s",err))
+	if err != nil && err != redis.Nil {
 		return
 	}
 	var job *models.Job
 	job, err = utils.ToJob(result)
 	if err != nil {
-		log.Print(fmt.Sprintf("Could not serialize job from queue: %s",err))
+		log.Print(fmt.Sprintf("Could not serialize job from queue: %s, result is: ",err, result))
 		return
 	}
 	pResult, pErr := w.handler.Process(job.Payload)
@@ -80,7 +79,7 @@ func (w *Worker) work() {
 }
 
 func (w *Worker) Start() {
-	for {
+	for count :=0; count < 2; count++ {
 		select {
 		case _ = <-w.quitCh:
 			break

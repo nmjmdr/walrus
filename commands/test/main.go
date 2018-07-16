@@ -7,9 +7,8 @@ import (
     "walrus/dispatcher"
     "fmt"
     "time"
-    "walrus/worker"
-    "walrus/postbox"
-    "walrus/worker/exhandler"
+    //"walrus/worker"
+    //"walrus/postbox"
 )
 
 func main() {
@@ -24,10 +23,10 @@ func main() {
   fmt.Println("Job id: ", jobId)
 
   d := dispatcher.NewDispatcher()
-  go d.Start()
+  d.Start()
 
-  w := worker.NewWorker(exhandler.NewExampleHandler(), postbox.NewConsolePost())
-  go w.Start()
+  //w := worker.NewWorker(worker.NewExampleHandler(), postbox.NewConsolePost())
+  //go w.Start()
 
   select {
 

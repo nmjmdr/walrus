@@ -1,17 +1,14 @@
-package exhandler
+package worker
 
-import (
-  "walrus/worker"
-)
 
 type ExampleHandler struct {
 }
 
-func NewExampleHandler() worker.Handler {
+func NewExampleHandler() Handler {
   return &ExampleHandler{}
 }
 
-func (e *ExampleHandler) Process(paylaod string) (string, error) {
+func (e *ExampleHandler) Process(payload string) (string, error) {
   result := "Result: " + payload
   return result, nil
 }
