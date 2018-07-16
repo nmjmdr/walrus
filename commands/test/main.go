@@ -9,6 +9,7 @@ import (
     "time"
     "walrus/worker"
     "walrus/postbox"
+    "walrus/worker/exhandler"
 )
 
 func main() {
@@ -23,5 +24,12 @@ func main() {
   fmt.Println("Job id: ", jobId)
 
   d := dispatcher.NewDispatcher()
-  d.Start()
+  go d.Start()
+
+  w := worker.NewWorker(exhandler.NewExampleHandler(), postbox.NewConsolePost())
+  go w.Start()
+
+  select {
+
+  }
 }

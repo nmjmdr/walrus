@@ -8,8 +8,8 @@ import (
 type ConsolePost struct {
 }
 
-func New() ResultsPostbox {
-  return &Console{}
+func NewConsolePost() ResultsPostbox {
+  return &ConsolePost{}
 }
 
 func (c *ConsolePost) Post(job models.Job, result string, err error) {

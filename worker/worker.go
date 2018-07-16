@@ -5,6 +5,9 @@ import (
 	"walrus/utils"
 	"walrus/constants"
 	"walrus/postbox"
+	"log"
+	"fmt"
+	"walrus/models"
 )
 
 type Handler interface {
@@ -17,11 +20,11 @@ type Worker struct {
 	client   *redis.Client
 	handler Handler
 	quitCh chan bool
-	resultPost ResultsPostbox
+	resultPost postbox.ResultsPostbox
 }
 
 
-func NewWorker(handler Handler, resultPost ResultsPostbox) Worker {
+func NewWorker(handler Handler, resultPost postbox.ResultsPostbox) *Worker {
 	w := &Worker{}
 	w.quitCh = make(chan bool)
 	w.handler = handler
@@ -54,25 +57,22 @@ logic:
 
 
 func (w *Worker) work() {
-	workerQueue := utils.GetWorkerQueueName(d.Handler.JobType())
+	workerQueue := utils.GetWorkerQueueName(w.handler.JobType())
 	cmd := w.client.RPopLPush(workerQueue, constants.PROCESSING_QUEUE)
 	result, err := cmd.Result()
 	if err != nil {
 		log.Print(fmt.Sprintf("Could not fetch jobs from worker queue: %s",err))
 		return
 	}
-	if result == nil {
-		return nil
-	}
 	var job *models.Job
-	job, err = utils.ToJob(results[0])
+	job, err = utils.ToJob(result)
 	if err != nil {
 		log.Print(fmt.Sprintf("Could not serialize job from queue: %s",err))
 		return
 	}
-	pResult, pErr := w.Handler.Process(job.Payload)
-	w.resultPost.Post(job, pResult, pErr)
-	jobJs = utils.ToJson(job)
+	pResult, pErr := w.handler.Process(job.Payload)
+	w.resultPost.Post(*job, pResult, pErr)
+	jobJs, _ := utils.ToJson(job)
 	lremCmd := w.client.LRem(constants.PROCESSING_QUEUE,1,jobJs)
 	if lremCmd.Err() != nil {
 		log.Print(fmt.Sprintf("Could not delete job id: %s from processing queue, Error: %s",job.Id, err))
@@ -82,14 +82,14 @@ func (w *Worker) work() {
 func (w *Worker) Start() {
 	for {
 		select {
-		case _ = <-d.quitCh:
+		case _ = <-w.quitCh:
 			break
 		default:
-			d.work()
+			w.work()
 		}
 	}
 }
 
 func (w *Worker) Stop() {
-
+	w.quitCh <- true
 }
