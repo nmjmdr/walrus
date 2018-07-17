@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
   err := godotenv.Load()
   if err != nil {
     log.Fatal("Error loading .env file")
@@ -19,7 +20,7 @@ func main() {
 
   rq := schedule.GetSchedule()
 
-  jobId, _ := rq.Add("type1", "payload1", time.Duration(10))
+  jobId, _ := rq.Add("type1", "payload1", time.Duration(60))
   fmt.Println("Job id: ", jobId)
 
   d := dispatcher.NewDispatcher()
