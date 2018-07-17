@@ -10,9 +10,11 @@ import (
 	"walrus/models"
 )
 
+
 type Handler interface {
 	Process(payload string) (string, error)
 	JobType() string
+	VisiblityTimeoutTickCount() int64
 }
 
 
@@ -75,6 +77,10 @@ func (w *Worker) work() {
 		log.Print(fmt.Sprintf("Could not serialize job from queue: %s, result is: ",err, result))
 		return
 	}
+	// acquire the lock on the job, if the worker does not complete the job in that time
+	// it has lost control on it
+	// the lock period is dictated by the type of the job, hence the handler
+	// this lock has to use SET NX my_random_value pattern of locking - probably best done as its own module
 	pResult, pErr := w.handler.Process(job.Payload)
 	w.resultPost.Post(*job, pResult, pErr)
 	jobJs, _ := utils.ToJson(job)

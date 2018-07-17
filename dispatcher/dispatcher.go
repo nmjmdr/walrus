@@ -1,5 +1,10 @@
 package dispatcher
 
+// TO DO: Probably a good idea to introduce the ability to produce heartbeat
+// by sending a signal in an async manner to heartbeat mddule, which in turns calls a status or heartbeat api
+// this heartbeat api would collect such statuses and display them
+// Do this after doing queue visualization of redis queues
+
 import (
 	"fmt"
 	"github.com/go-redis/redis"

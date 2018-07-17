@@ -17,3 +17,8 @@ func (e *ExampleHandler) Process(payload string) (string, error) {
 func (e *ExampleHandler) JobType() string {
   return "type1"
 }
+
+
+func (e *ExampleHandler) VisiblityTimeoutTickCount() int64 {
+  return 1000
+}
