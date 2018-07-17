@@ -93,13 +93,13 @@ func (w *Worker) work() {
 	}
 
 	pResult, pErr := w.handler.Process(job.Payload)
-	lck.Unlock(job.Id)
 	w.resultPost.Post(*job, pResult, pErr)
 	jobJs, _ := utils.ToJson(job)
 	lremCmd := w.client.LRem(constants.PROCESSING_QUEUE,1,jobJs)
 	if lremCmd.Err() != nil {
 		log.Print(fmt.Sprintf("Could not delete job id: %s from processing queue, Error: %s",job.Id, err))
 	}
+	lck.Unlock(job.Id)
 }
 
 func (w *Worker) Start() {

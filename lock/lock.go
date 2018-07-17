@@ -10,6 +10,7 @@ import (
 type lockExp struct {
   Lock func(id string, expiry time.Duration) (bool, error)
   Unlock func(id string) error
+  IsLocked func(id string) (bool, error)
 }
 
 func NewLockExp(client *redis.Client) *lockExp {
@@ -30,6 +31,14 @@ func NewLockExp(client *redis.Client) *lockExp {
     } else {
       return errors.New("Cannot unlock, not the owner of lock")
     }
+  }
+  l.IsLocked = func (id string) (bool, error) {
+    val, err := client.Get(id).Result()
+    if err == redis.Nil {
+      return false, nil
+    }
+    return val, err
+
   }
   return l
 }
