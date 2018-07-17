@@ -1,0 +1,5 @@
+The idea of control panel is that it provides an api to :
+
+Is to perform the following on dispatchers, workers, recoverers on various nodes
+1. Start/Stop
+2. Monitor status

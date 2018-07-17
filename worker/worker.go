@@ -8,6 +8,7 @@ import (
 	"log"
 	"fmt"
 	"walrus/models"
+	"walrus/lock"
 )
 
 
@@ -77,11 +78,22 @@ func (w *Worker) work() {
 		log.Print(fmt.Sprintf("Could not serialize job from queue: %s, result is: ",err, result))
 		return
 	}
-	// acquire the lock on the job, if the worker does not complete the job in that time
-	// it has lost control on it
-	// the lock period is dictated by the type of the job, hence the handler
-	// this lock has to use SET NX my_random_value pattern of locking - probably best done as its own module
+
+	lck := lock.NewLockExp(w.client)
+	locked, err := lck.Lock(job.Id, w.handler.VisiblityTimeoutTickCount())
+
+	if err != nil {
+		log.Printf("Error encountred while trying to get for job: %s, Error: %s", job.Id, err)
+		return
+	}
+
+	if !locked {
+		// sone other worker has a lock on the job, return
+		return
+	}
+
 	pResult, pErr := w.handler.Process(job.Payload)
+	lck.Unlock(job.Id)
 	w.resultPost.Post(*job, pResult, pErr)
 	jobJs, _ := utils.ToJson(job)
 	lremCmd := w.client.LRem(constants.PROCESSING_QUEUE,1,jobJs)
