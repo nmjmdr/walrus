@@ -2,14 +2,26 @@
 
 > "The time has come," the walrus said, "To talk of other things..."
 
-A deferred task execution engine in GO
+A task execution engine in GO
 
+With Walrus you can schedule tasks to be executed immediately or at a point in time. It uses Redis to implement the scheduler queues.
+
+Walrus has the following components:
+
+* Scheduler API- (TO DO: supportan API interface to schedule jobs)
+* Dispatcher - Dispatches jobs to worker queues
+* Worker - A worker process that picks jobs from worker queues and executes jobs 
+* Recoverer - A recovery process that can recover jobs from workers that have failed or taking too long to execute and requeue them onto worker queues
+
+A Job has a "Type". The type of the job identifies the name of the worker queue where the job needs to be queued. Workers specific to that job queue compete to pick jobs from the queue.
+
+A Workers needs to be injected with an implementation of Handler interface. This interface defines the method that process the job. It also needs to define a "VisiblityTimeOut". This timeout identifies the time for which a worker is allowed to keep processing the job before being attempted to recovered from the "Recoverer".
 
 
 Notes:
 
 * Reference later: https://github.com/aphyr/tea-time 
-
+Further enhancements: 
 * Allow for repetitive task execution: "every" . 
   * https://lwn.net/Articles/646950/ . 
   * https://blog.acolyer.org/2015/11/23/hashed-and-hierarchical-timing-wheels/ . 
