@@ -17,5 +17,5 @@ func (c *ConsolePost) Post(job models.Job, result string, err error) {
     fmt.Printf("Job: %s posted an error response: %s",err)
     return
   }
-  fmt.Printf("Job: %s posted result: %s",job.Id, result)
+  fmt.Printf("Job: %s posted result: %s\n",job.Id, result)
 }

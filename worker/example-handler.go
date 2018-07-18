@@ -9,20 +9,24 @@ type ExampleHandler struct {
   counter int
 }
 
+var e = ExampleHandler{}
+
 func NewExampleHandler() Handler {
-  return &ExampleHandler{counter : 0}
+  return &e
 }
 
 func (e *ExampleHandler) Process(payload string) (string, error) {
   result := "Result: " + payload
   if e.counter == 0 {
-    fmt.Println("With job sleeping: ")
-   time.Sleep(20 * time.Second)
+    e.counter++
+    fmt.Println("With job sleeping")
+    time.Sleep(20 * time.Second)
+    return "Just slept", nil
   } else {
     fmt.Println("Not sleeping now")
-    e.counter++
+    return result, nil
   }
-  return result, nil
+
 }
 
 
