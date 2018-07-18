@@ -9,6 +9,7 @@ import (
     "time"
     "walrus/worker"
     "walrus/postbox"
+    "walrus/recoverer"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 
   rq := schedule.GetSchedule()
 
-  jobId, _ := rq.Add("type1", "payload1", time.Duration(60))
+  jobId, _ := rq.Add("type1", "payload1", 2 * time.Second)
   fmt.Println("Job id: ", jobId)
 
   d := dispatcher.NewDispatcher()
@@ -28,6 +29,11 @@ func main() {
 
   w := worker.NewWorker(worker.NewExampleHandler(), postbox.NewConsolePost())
   go w.Start()
+
+
+  r := recoverer.NewRecoverer()
+  go r.Start()
+
 
   select {
 

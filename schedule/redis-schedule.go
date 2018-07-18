@@ -20,8 +20,8 @@ func newJob(jobType string, payload string) models.Job {
 	return models.Job{Id: id.String(), Type: jobType, Payload: payload}
 }
 
-func (r *redisScheduleQueue) Add(jobType string, payload string, runAfterSeconds time.Duration) (string, error) {
-	runAt := time.Now().Add(runAfterSeconds * time.Second).UnixNano()
+func (r *redisScheduleQueue) Add(jobType string, payload string, runAfter time.Duration) (string, error) {
+	runAt := time.Now().Add(runAfter).UnixNano()
 	job := newJob(jobType, payload)
 
 	jobJs, err := utils.ToJson(job)
