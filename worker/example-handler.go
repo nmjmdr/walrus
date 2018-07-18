@@ -35,6 +35,6 @@ func (e *ExampleHandler) JobType() string {
 }
 
 
-func (e *ExampleHandler) VisiblityTimeoutTickCount() time.Duration {
+func (e *ExampleHandler) VisiblityTimeout() time.Duration {
   return 3 * time.Second
 }

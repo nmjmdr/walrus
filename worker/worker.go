@@ -16,7 +16,7 @@ import (
 type Handler interface {
 	Process(payload string) (string, error)
 	JobType() string
-	VisiblityTimeoutTickCount() time.Duration
+	VisiblityTimeout() time.Duration
 }
 
 
@@ -81,7 +81,7 @@ func (w *Worker) work() {
 	}
 
 	lck := lock.NewLockExp(w.client)
-	locked, err := lck.Lock(job.Id, w.handler.VisiblityTimeoutTickCount())
+	locked, err := lck.Lock(job.Id, w.handler.VisiblityTimeout())
 
 	if err != nil {
 		log.Printf("Error encountred while trying to get for job: %s, Error: %s", job.Id, err)
