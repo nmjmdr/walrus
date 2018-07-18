@@ -33,11 +33,11 @@ func NewLockExp(client *redis.Client) *lockExp {
     }
   }
   l.IsLocked = func (id string) (bool, error) {
-    val, err := client.Get(id).Result()
+    _, err := client.Get(id).Result()
     if err == redis.Nil {
       return false, nil
     }
-    return val, err
+    return true, err
 
   }
   return l

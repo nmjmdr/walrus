@@ -9,13 +9,14 @@ import (
 	"fmt"
 	"walrus/models"
 	"walrus/lock"
+	"time"
 )
 
 
 type Handler interface {
 	Process(payload string) (string, error)
 	JobType() string
-	VisiblityTimeoutTickCount() int64
+	VisiblityTimeoutTickCount() time.Duration
 }
 
 

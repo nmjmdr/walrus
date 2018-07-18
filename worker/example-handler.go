@@ -1,5 +1,8 @@
 package worker
 
+import (
+  "time"
+)
 
 type ExampleHandler struct {
 }
@@ -19,6 +22,6 @@ func (e *ExampleHandler) JobType() string {
 }
 
 
-func (e *ExampleHandler) VisiblityTimeoutTickCount() int64 {
-  return 1000
+func (e *ExampleHandler) VisiblityTimeoutTickCount() time.Duration {
+  return 10 * time.Second
 }
