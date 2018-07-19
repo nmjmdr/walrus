@@ -1,8 +1,10 @@
 package service
 
 import (
-	"common"
+	"walrus/common"
 	"github.com/gorilla/mux"
+  "fmt"
+  "net/http"
 )
 
 type Service struct {
@@ -17,19 +19,19 @@ func NewService(routes []common.Route) *Service {
 	s.routes = routes
 	addRoutes(s.muxRouter, s.routes)
 	s.quitCh = make(chan bool)
-	return r
+	return s
 }
 
 func addRoutes(muxRouter *mux.Router, routes []common.Route) {
 	for _, route := range routes {
-		muxRouter.HandleFunc(route.Route, route.Handler).Method(route.Method)
+		muxRouter.HandleFunc(route.Route, route.Handler).Methods(route.Method)
 	}
 }
 
 func (s *Service) Start(service string, listenAddress string) {
 	go func() {
 		if err := http.ListenAndServe(listenAddress, s.muxRouter); err != nil {
-			log.Fatalf("Service %s failed to start, Error: ", service, err)
+			panic(fmt.Sprintf("Service %s failed to start, Error: ", service, err))
 		} else {
 			fmt.Printf("'%s listening on %s...\n", service, listenAddress)
 		}
