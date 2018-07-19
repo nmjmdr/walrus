@@ -35,7 +35,7 @@ func (s *Service) Start(service string, listenAddress string) {
 		}
 	}()
 
-	//TO DO: not done yet: graceful handling of services being served when service attempts to quit
+	//TO DO: not done yet: graceful handling of service being shutdown when service requests are in pipeline
 	select {
 	case _ = <-s.quitCh:
 		fmt.Printf("%s received stop signal, stopping\n")
