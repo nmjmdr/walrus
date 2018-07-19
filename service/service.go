@@ -29,7 +29,7 @@ func addRoutes(muxRouter *mux.Router, routes []common.Route) {
 func (s *Service) Start(service string, listenAddress string) {
 	go func() {
 		if err := http.ListenAndServe(listenAddress, s.muxRouter); err != nil {
-			fmt.Println(err)
+			log.Fatalf("Service %s failed to start, Error: ", service, err)
 		} else {
 			fmt.Printf("'%s listening on %s...\n", service, listenAddress)
 		}
