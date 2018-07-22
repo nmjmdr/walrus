@@ -32,10 +32,15 @@ func (s *Service) Start(service string, listenAddress string) {
 	go func() {
 		if err := http.ListenAndServe(listenAddress, s.muxRouter); err != nil {
 			panic(fmt.Sprintf("Service %s failed to start, Error: ", service, err))
-		} else {
-			fmt.Printf("'%s listening on %s...\n", service, listenAddress)
 		}
 	}()
+	s.muxRouter.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+    tpl, err1 := route.GetPathTemplate()
+    met, err2 := route.GetMethods()
+    fmt.Println(tpl, err1, met, err2)
+    return nil
+	})
+	fmt.Printf("%s listening on %s, ready to serve requests\n", service, listenAddress)
 
 	//TO DO: not done yet: graceful handling of service being shutdown when service requests are in pipeline
 	select {
