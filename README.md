@@ -2,6 +2,8 @@
 
 > "The time has come," the walrus said, "To talk of other things..."
 
+![Walrus and carpenter](https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Briny_Beach.jpg/640px-Briny_Beach.jpg)
+
 A task execution engine in GO
 
 With Walrus you can schedule tasks to be executed immediately or at a point in time. It uses Redis to implement the scheduler queues.
