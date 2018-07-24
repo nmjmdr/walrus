@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"strings"
 	"errors"
-	"io/ioutil"
   )
 
 type AddJobRequest struct {
@@ -14,21 +13,11 @@ type AddJobRequest struct {
 	RunAfterSecs    int    `"json:"run_after_secs"`
 }
 
-
-func readRequest(r *http.Request) (*AddJobRequest, error) {
-	b, err := ioutil.ReadAll(r.Body)
-	  defer r.Body.Close()
-	  if err != nil {
-		  return nil, err
-	  }
+  
+func ToAddJobRequest(r *http.Request) (*AddJobRequest, error) {
 	var addJobReq AddJobRequest
-	err = json.Unmarshal(b, &addJobReq)
-	return &addJobReq, err
-  
-  }
-  
-  func ToAddJobRequest(r *http.Request) (*AddJobRequest, error) {
-	addJobReq, err := readRequest(r)
+	readBytes, err := readRequest(r)
+	err = json.Unmarshal(readBytes, &addJobReq)
 	if err != nil {
 	  return nil, err
 	}
@@ -36,5 +25,5 @@ func readRequest(r *http.Request) (*AddJobRequest, error) {
 	if len(addJobReq.JobType) == 0 {
 	  return nil, errors.New("JobType cannot be empty")
 	}
-	return addJobReq, nil
+	return &addJobReq, nil
 }
