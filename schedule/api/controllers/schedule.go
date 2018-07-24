@@ -2,23 +2,20 @@ package controllers
 
 import (
   "net/http"
-  "walrus/schedule/api/requestparsers/addjobparser"
+  //"walrus/schedule/api/requestparsers/addjobparser"
   "walrus/schedule"
   "time"
   "encoding/json"
+  "walrus/schedule/api/apipayload/requests"
+  "walrus/schedule/api/apipayload/responses"
 )
 
 type ScheduleHandlers struct {
   schedule schedule.Schedule
 }
 
-type AddJobResponse struct {
-  JobId string `json:"job_id"`
-}
-
-
 func (s *ScheduleHandlers) Add(w http.ResponseWriter, r *http.Request) {
-  addJobReq, err := addjobparser.ParseRequest(r)
+  addJobReq, err := requests.ToAddJobRequest(r)
   if err != nil {
     http.Error(w, err.Error(), 500)
     return
@@ -28,7 +25,7 @@ func (s *ScheduleHandlers) Add(w http.ResponseWriter, r *http.Request) {
     http.Error(w, err.Error(), 500)
     return
   }
-  addJobRes := AddJobResponse{ JobId: jobId }
+  addJobRes := response.AddJobResponse{ JobId: jobId }
   output, _ := json.Marshal(addJobRes)
   w.Header().Set("content-type", "application/json")
 	w.Write(output)
