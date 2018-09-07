@@ -10,7 +10,7 @@ With Walrus you can schedule tasks to be executed immediately or at a point in t
 
 Walrus has the following components:
 
-* Scheduler API- (TO DO: supportan API interface to schedule jobs)
+* Scheduler API
 * Dispatcher - Dispatches jobs to worker queues
 * Worker - A worker process that picks jobs from worker queues and executes jobs 
 * Recoverer - A recovery process that can recover jobs from workers that have failed or taking too long to execute and requeue them onto worker queues
