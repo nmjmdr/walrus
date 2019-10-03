@@ -79,7 +79,9 @@ func (w *Worker) work() {
 		log.Print(fmt.Sprintf("Could not serialize job from queue: %s, result is: ",err, result))
 		return
 	}
-
+	// Checking for lock not required, If we were able to pop from worker queue means
+	// that no other worker is working on it
+	// we only need to set the lock, ideally RPOPLPUSH and locking has to be done in a redis transaction
 	lck := lock.NewLockExp(w.client)
 	locked, err := lck.Lock(job.Id, w.handler.VisiblityTimeout())
 
