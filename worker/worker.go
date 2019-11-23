@@ -79,7 +79,8 @@ func (w *Worker) work() {
 		log.Print(fmt.Sprintf("Could not serialize job from queue: %s, result is: ",err, result))
 		return
 	}
-	// This locks the visiblity timeout lock, to tell other workers that this worked has locked it
+	// This locks the visiblity timeout lock, to tell other workers that this worked has locked it. The receoverer keeps checking 
+	// processing queue and the locks to see if it can recover any jobs
 	lck := lock.NewLockExp(w.client)
 	locked, err := lck.Lock(job.Id, w.handler.VisiblityTimeout())
 
