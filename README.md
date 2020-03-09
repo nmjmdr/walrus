@@ -8,8 +8,10 @@ A task execution engine in GO
 
 
 > Version 2.0 of Walrus called Jobber https://github.com/nmjmdr/jobber is now out. Jobber simplifies the design and improves 
-> the project structure.Jobber does not have built in scheduler like Walrus. A scheduler is used to schedule jobs for 
-> execution. Jobber implements dispatcher, worker and recoverer.
+> the project structure.
+> Jobber does not have built in scheduler like Walrus. A scheduler is used to schedule jobs for 
+> execution. 
+> Jobber implements dispatcher, worker and recoverer.
 > Jobber can be easily extended to perform the functionality of Walrus by adding the scheduler component to it.
 
 
